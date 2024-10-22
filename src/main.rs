@@ -252,3 +252,226 @@ fn main() -> io::Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+    use unicode_segmentation::UnicodeSegmentation;
+
+    #[test]
+    fn test_random_string_length() {
+        for _ in 0..1000000 {
+            let s = random_string();
+            let grapheme_count = s.graphemes(true).count();
+            assert!(
+                (1..=32).contains(&grapheme_count),
+                "Grapheme count out of bounds: {} (string: {})",
+                grapheme_count,
+                s
+            );
+        }
+    }
+
+    #[test]
+    fn test_all_chars_appear() {
+        let mut appearances = HashSet::<&'static str>::new();
+        for _ in 0..10000 {
+            let s = random_string();
+            appearances.extend(CHAR_SET.iter().filter(|&&c| s.contains(c)));
+        }
+        assert_eq!(
+            appearances.len(),
+            CHAR_SET.len(),
+            "Not all characters appeared in 10000 iterations"
+        );
+    }
+
+    #[test]
+    fn test_stream_direction_changes() {
+        let mut stream = Stream::new(80, 24);
+        let mut direction_changes = 0;
+        let mut last_direction = stream.direction.get_offset();
+
+        for _ in 0..1000 {
+            stream.update(80, 24);
+            let new_direction = stream.direction.get_offset();
+            if new_direction != last_direction {
+                direction_changes += 1;
+            }
+            last_direction = new_direction;
+        }
+
+        assert!(
+            direction_changes > 50,
+            "Stream should change direction frequently, only changed {} times",
+            direction_changes
+        );
+    }
+
+    #[test]
+    fn test_stream_bounds() {
+        let mut stream = Stream::new(80, 24);
+        for _ in 0..10000 {
+            stream.update(80, 24);
+            assert!(
+                stream.x >= 1 && stream.x <= 78,
+                "X out of bounds: {}",
+                stream.x
+            );
+            assert!(stream.y >= 1, "Y below minimum: {}", stream.y);
+        }
+    }
+
+    #[test]
+    fn test_color_distribution() {
+        let mut color_counts = std::collections::HashMap::new();
+        for _ in 0..10000 {
+            let color = random_color();
+            *color_counts.entry(format!("{:?}", color)).or_insert(0) += 1;
+        }
+
+        // Check that each color appeared at least once
+        assert!(
+            color_counts.len() >= COLORS.len(),
+            "Not all colors appeared: {:?}",
+            color_counts
+        );
+
+        // Verify primary colors appear more often than accents
+        for weight in COLORS {
+            match weight {
+                Weight::Primary(c, _) => {
+                    let count = color_counts.get(&format!("{:?}", c)).unwrap_or(&0);
+                    assert!(
+                        count > &500,
+                        "Primary color {:?} appeared only {} times",
+                        c,
+                        count
+                    );
+                }
+                Weight::Accent(c, _) => {
+                    let count = color_counts.get(&format!("{:?}", c)).unwrap_or(&0);
+                    assert!(
+                        count > &100,
+                        "Accent color {:?} appeared only {} times",
+                        c,
+                        count
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_chaos_probability() {
+        let mut new_streams = 0;
+        let trials = 10000;
+
+        for _ in 0..trials {
+            if rand::thread_rng().gen_bool(CHAOS) {
+                new_streams += 1;
+            }
+        }
+
+        let actual_probability = new_streams as f64 / trials as f64;
+        assert!(
+            (actual_probability - CHAOS).abs() < 0.02,
+            "Chaos probability {} significantly deviated from expected {}",
+            actual_probability,
+            CHAOS
+        );
+    }
+
+    #[test]
+    fn test_random_string_content() {
+        let s = random_string();
+        assert!(
+            s.chars()
+                .all(|c| CHAR_SET.iter().any(|&set| set.contains(c))),
+            "Invalid characters in string: {}",
+            s
+        );
+    }
+
+    #[test]
+    fn test_color_weights() {
+        let total: u8 = COLORS
+            .iter()
+            .map(|c| match c {
+                Weight::Primary(_, w) | Weight::Accent(_, w) => w,
+            })
+            .sum();
+        assert!(total > 0, "Total color weights must be positive");
+
+        let mut counts = std::collections::HashMap::new();
+        for _ in 0..1000 {
+            let color = random_color();
+            *counts.entry(color).or_insert(0) += 1;
+        }
+
+        // Verify primary colors appear more frequently than accents
+        for color_weight in COLORS {
+            match color_weight {
+                Weight::Primary(c, _) => {
+                    let count = counts.get(c).unwrap_or(&0);
+                    assert!(*count > 100, "Primary color {:?} appeared too rarely", c);
+                }
+                Weight::Accent(_, _) => {}
+            }
+        }
+    }
+
+    #[test]
+    fn test_stream_boundaries() {
+        let mut stream = Stream::new(80, 24);
+
+        // Test multiple updates to ensure boundaries are respected
+        for _ in 0..1000 {
+            stream.update(80, 24);
+            assert!(
+                stream.x > 0 && stream.x < 79,
+                "X position out of bounds: {}",
+                stream.x
+            );
+            assert!(stream.y > 0, "Y position below zero: {}", stream.y);
+        }
+    }
+
+    #[test]
+    fn test_direction_distribution() {
+        let mut counts = std::collections::HashMap::new();
+        for _ in 0..1000 {
+            let dir = Direction::random();
+            let offset = dir.get_offset();
+            *counts.entry(offset).or_insert(0) += 1;
+        }
+
+        // Check that all directions are used
+        assert_eq!(counts.len(), 8, "Not all directions were generated");
+
+        // Check for roughly even distribution
+        for (_offset, count) in counts {
+            assert!(count > 50, "Direction appeared too rarely: {} times", count);
+        }
+    }
+
+    #[test]
+    fn test_stream_movement() {
+        let mut stream = Stream::new(80, 24);
+        let initial_pos = (stream.x, stream.y);
+
+        // Store a few positions to verify movement
+        let mut positions = vec![initial_pos];
+        for _ in 0..10 {
+            stream.update(80, 24);
+            positions.push((stream.x, stream.y));
+        }
+
+        // Verify that the stream actually moved
+        assert!(
+            positions.windows(2).any(|w| w[0] != w[1]),
+            "Stream didn't move from initial position"
+        );
+    }
+}
