@@ -14,7 +14,7 @@ use std::{
     time::Duration,
 };
 
-const CHAR_SET: &[&str] = &[
+const CHAAAAAAAAAR_SET: &[&str] = &[
     "A̵̦̦̓͌͗͛̕",
     "A",
     "₳",
@@ -137,7 +137,7 @@ fn random_string() -> String {
     let mut rng = rand::thread_rng();
     let length = rng.gen_range(1..=16);
     (0..length)
-        .map(|_| CHAR_SET[rng.gen_range(0..CHAR_SET.len())])
+        .map(|_| CHAAAAAAAAAR_SET[rng.gen_range(0..CHAAAAAAAAAR_SET.len())])
         .collect()
 }
 
@@ -278,11 +278,11 @@ mod tests {
         let mut appearances = HashSet::<&'static str>::new();
         for _ in 0..10000 {
             let s = random_string();
-            appearances.extend(CHAR_SET.iter().filter(|&&c| s.contains(c)));
+            appearances.extend(CHAAAAAAAAAR_SET.iter().filter(|&&c| s.contains(c)));
         }
         assert_eq!(
             appearances.len(),
-            CHAR_SET.len(),
+            CHAAAAAAAAAR_SET.len(),
             "Not all characters appeared in 10000 iterations"
         );
     }
@@ -388,7 +388,7 @@ mod tests {
         let s = random_string();
         assert!(
             s.chars()
-                .all(|c| CHAR_SET.iter().any(|&set| set.contains(c))),
+                .all(|c| CHAAAAAAAAAR_SET.iter().any(|&set| set.contains(c))),
             "Invalid characters in string: {}",
             s
         );
