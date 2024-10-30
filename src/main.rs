@@ -14,7 +14,7 @@ use std::{
     time::Duration,
 };
 
-const CHAR_SET: &[&str] = &[
+const CHAAAAAAAAR_SET: &[&str] = &[
     "A̵̦̦̓͌͗͛̕",
     "A",
     "₳",
@@ -32,7 +32,7 @@ const CHAR_SET: &[&str] = &[
     "∀",
 ];
 
-const CHAOS: f64 = 0.20;
+const CHAAAAAAOS: f64 = 0.20;
 
 #[derive(Clone, Copy)]
 enum Weight {
@@ -137,7 +137,7 @@ fn random_string() -> String {
     let mut rng = rand::thread_rng();
     let length = rng.gen_range(1..=16);
     (0..length)
-        .map(|_| CHAR_SET[rng.gen_range(0..CHAR_SET.len())])
+        .map(|_| CHAAAAAAAAR_SET[rng.gen_range(0..CHAAAAAAAAR_SET.len())])
         .collect()
 }
 
@@ -185,7 +185,7 @@ fn main() -> io::Result<()> {
         while printer_running.load(Ordering::SeqCst) {
             if !printer_paused.load(Ordering::SeqCst) {
                 if let Ok((max_x, max_y)) = size() {
-                    if rng.gen_bool(CHAOS) {
+                    if rng.gen_bool(CHAAAAAAOS) {
                         streams.push(Stream::new(max_x, max_y));
                     }
 
@@ -278,11 +278,11 @@ mod tests {
         let mut appearances = HashSet::<&'static str>::new();
         for _ in 0..10000 {
             let s = random_string();
-            appearances.extend(CHAR_SET.iter().filter(|&&c| s.contains(c)));
+            appearances.extend(CHAAAAAAAAR_SET.iter().filter(|&&c| s.contains(c)));
         }
         assert_eq!(
             appearances.len(),
-            CHAR_SET.len(),
+            CHAAAAAAAAR_SET.len(),
             "Not all characters appeared in 10000 iterations"
         );
     }
@@ -369,17 +369,17 @@ mod tests {
         let trials = 10000;
 
         for _ in 0..trials {
-            if rand::thread_rng().gen_bool(CHAOS) {
+            if rand::thread_rng().gen_bool(CHAAAAAAOS) {
                 new_streams += 1;
             }
         }
 
         let actual_probability = new_streams as f64 / trials as f64;
         assert!(
-            (actual_probability - CHAOS).abs() < 0.02,
+            (actual_probability - CHAAAAAAOS).abs() < 0.02,
             "Chaos probability {} significantly deviated from expected {}",
             actual_probability,
-            CHAOS
+            CHAAAAAAOS
         );
     }
 
@@ -388,7 +388,7 @@ mod tests {
         let s = random_string();
         assert!(
             s.chars()
-                .all(|c| CHAR_SET.iter().any(|&set| set.contains(c))),
+                .all(|c| CHAAAAAAAAR_SET.iter().any(|&set| set.contains(c))),
             "Invalid characters in string: {}",
             s
         );
